@@ -22,10 +22,10 @@ SPOTS = [
 ]
 
 # Condiciones "optimas" (mismas para los dos spots; cambialas si queres)
-OLA_MIN_M      = 0.7    # altura de ola minima (metros)
-OLA_MAX_M      = 2.0    # altura de ola maxima (si sube de esto, se pone feo)
-PERIODO_MIN_S  = 7.0    # periodo minimo (segundos) -> mas periodo = mejor calidad
-VIENTO_MAX_KMH = 18.0   # viento maximo (km/h)
+OLA_MIN_M      = 0.0    # altura de ola minima (metros)
+OLA_MAX_M      = 10.0    # altura de ola maxima (si sube de esto, se pone feo)
+PERIODO_MIN_S  = 0.0    # periodo minimo (segundos) -> mas periodo = mejor calidad
+VIENTO_MAX_KMH = 200.0   # viento maximo (km/h)
 
 # Solo horas con luz
 HORA_DESDE = 6
