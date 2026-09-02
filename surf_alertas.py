@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 Alertas de surf - Pinamar y Mar del Plata
-Chequea el pronostico (Open-Meteo, gratis y sin API key) y, si en las
-proximas 48 hs hay ventanas con buenas condiciones, avisa por Telegram.
+Chequea el pronostico (Open-Meteo, gratis y sin API key) y, si de aca
+hasta el final del domingo hay ventanas con buenas condiciones, avisa
+por Telegram.
 
 No necesita instalar nada: usa solo la libreria estandar de Python.
 """
@@ -22,17 +23,14 @@ SPOTS = [
 ]
 
 # Condiciones "optimas" (mismas para los dos spots; cambialas si queres)
-OLA_MIN_M      = 0.0    # altura de ola minima (metros)
-OLA_MAX_M      = 10.0    # altura de ola maxima (si sube de esto, se pone feo)
-PERIODO_MIN_S  = 0.0    # periodo minimo (segundos) -> mas periodo = mejor calidad
-VIENTO_MAX_KMH = 200.0   # viento maximo (km/h)
+OLA_MIN_M      = 0.7    # altura de ola minima (metros)
+OLA_MAX_M      = 2.0    # altura de ola maxima (si sube de esto, se pone feo)
+PERIODO_MIN_S  = 7.0    # periodo minimo (segundos) -> mas periodo = mejor calidad
+VIENTO_MAX_KMH = 18.0   # viento maximo (km/h)
 
 # Solo horas con luz
 HORA_DESDE = 6
 HORA_HASTA = 20
-
-# Cuantas horas hacia adelante mirar
-HORIZONTE_HS = 48
 
 # Viento offshore (de la tierra hacia el mar) para esta costa: sector Oeste.
 # Es un "bonus", no descarta la ventana; solo la marca como mejor.
@@ -53,13 +51,13 @@ def datos_spot(lat, lon):
     marine = get_json(
         f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}"
         "&hourly=wave_height,wave_period,wave_direction,swell_wave_period"
-        "&timezone=auto&forecast_days=3"
+        "&timezone=auto&forecast_days=7"
     )["hourly"]
 
     viento = get_json(
         f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
         "&hourly=wind_speed_10m,wind_direction_10m"
-        "&wind_speed_unit=kmh&timezone=auto&forecast_days=3"
+        "&wind_speed_unit=kmh&timezone=auto&forecast_days=7"
     )["hourly"]
 
     v_speed = dict(zip(viento["time"], viento["wind_speed_10m"]))
@@ -92,10 +90,16 @@ def es_offshore(dir_grados):
         return False
     return OFFSHORE_DESDE <= dir_grados <= OFFSHORE_HASTA
 
+def limite_domingo(ahora):
+    """Devuelve el final del domingo de esta semana (o de hoy si ya es domingo)."""
+    dias_hasta_domingo = (6 - ahora.weekday()) % 7   # lun=0 ... dom=6
+    domingo = ahora + timedelta(days=dias_hasta_domingo)
+    return domingo.replace(hour=23, minute=59, second=59, microsecond=0)
+
 def ventanas_optimas(filas):
-    """Filtra horas buenas (dia + horizonte) y agrupa las consecutivas."""
+    """Filtra horas buenas (dia + hasta el domingo) y agrupa las consecutivas."""
     ahora = datetime.utcnow() - timedelta(hours=3)   # hora Argentina (UTC-3)
-    limite = ahora + timedelta(hours=HORIZONTE_HS)
+    limite = limite_domingo(ahora)
 
     buenas = []
     for f in filas:
@@ -166,7 +170,7 @@ def main():
             bloques.append(f"🏄 {spot['nombre']}\n{lineas}")
 
     if not bloques:
-        print("Sin ventanas optimas en las proximas 48 hs. No mando nada.")
+        print("Sin ventanas optimas de aca al domingo. No mando nada.")
         return
 
     mensaje = "Condiciones para surfear 🌊\n\n" + "\n\n".join(bloques)
