@@ -1,0 +1,23 @@
+name: Alertas de surf
+ 
+on:
+  schedule:
+    # Horarios en UTC. 12:00 y 21:00 UTC = 09:00 y 18:00 en Argentina.
+    - cron: "0 12,21 * * *"
+  workflow_dispatch:   # permite correrlo a mano desde la pestaña Actions
+ 
+jobs:
+  chequear:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+ 
+      - name: Chequear condiciones y avisar
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python surf_alertas.py
