@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parte de olas — Pinamar y Mar del Plata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --abyss:#06171f;
+    --deep:#0c2833;
+    --panel:#103240;
+    --line:#1d4553;
+    --foam:#e9f5f4;
+    --muted:#7fa6b0;
+    --dim:#557782;
+    --glow:#3fe0c8;
+    --glow-soft:#3fe0c833;
+    --warn:#f0a24b;
+    --coral:#ec6a55;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 70% -10%, #113a49 0%, transparent 60%),
+      var(--abyss);
+    color:var(--foam);
+    font-family:'Inter',system-ui,sans-serif;
+    font-feature-settings:"tnum" 1;
+    line-height:1.5;
+    min-height:100vh;
+    padding:clamp(16px,4vw,40px);
+  }
+  .wrap{max-width:940px;margin:0 auto}
+
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(20px,3.4vw,26px);letter-spacing:-.01em}
+  h1 span{color:var(--muted);font-weight:400}
+  .refresh{
+    background:transparent;border:1px solid var(--line);color:var(--foam);
+    font:inherit;font-size:13px;padding:7px 14px;border-radius:999px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;transition:border-color .15s,background .15s;
+  }
+  .refresh:hover{border-color:var(--glow);background:var(--glow-soft)}
+  .refresh:disabled{opacity:.5;cursor:wait}
+  .stamp{font-size:12px;color:var(--dim);margin-top:2px}
+
+  /* HERO: el veredicto */
+  .hero{
+    background:linear-gradient(160deg,var(--deep),var(--abyss));
+    border:1px solid var(--line);border-radius:18px;
+    padding:clamp(20px,3.5vw,30px);margin-bottom:26px;position:relative;overflow:hidden;
+  }
+  .hero::after{
+    content:"";position:absolute;right:-40px;top:-40px;width:220px;height:220px;
+    background:radial-gradient(circle,var(--glow-soft),transparent 70%);pointer-events:none;
+  }
+  .hero .eye{font-size:13px;color:var(--muted);margin-bottom:8px}
+  .hero .verdict{font-family:'Space Grotesk',sans-serif;font-size:clamp(24px,5vw,40px);font-weight:700;letter-spacing:-.02em;line-height:1.1}
+  .hero .verdict .accent{color:var(--glow)}
+  .hero .sub{color:var(--muted);margin-top:10px;font-size:15px}
+  .hero.calm .verdict{color:var(--foam)}
+
+  .spot{margin-bottom:26px}
+  .spot-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .spot-head h2{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:500}
+  .pill{font-size:12.5px;padding:4px 11px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .pill.good{color:var(--glow);border-color:var(--glow);background:var(--glow-soft)}
+
+  .day{display:grid;grid-template-columns:52px 1fr;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .day-label{font-size:13px;color:var(--muted);text-transform:capitalize}
+  .day-label b{display:block;color:var(--foam);font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:500;text-transform:capitalize}
+  .hours{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+  .cell{
+    flex:0 0 auto;width:46px;border-radius:9px;padding:7px 4px 6px;text-align:center;
+    background:var(--panel);border:1px solid transparent;border-bottom:2px solid var(--dim);
+    position:relative;
+  }
+  .cell .hr{font-size:10px;color:var(--dim);margin-bottom:2px}
+  .cell .wv{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:500;line-height:1.1}
+  .cell .pd{font-size:10px;color:var(--muted)}
+  .cell.windy{border-bottom-color:var(--coral)}
+  .cell.calm-wind{border-bottom-color:var(--glow)}
+  .cell.small{opacity:.5}
+  .cell.big .wv{color:var(--coral)}
+  .cell.optimal{background:linear-gradient(180deg,#12414a,#0e3038);border-color:var(--glow);box-shadow:0 0 0 1px var(--glow-soft),0 6px 18px -8px var(--glow)}
+  .cell.optimal .wv{color:var(--glow)}
+  .cell .off{position:absolute;top:4px;right:5px;width:5px;height:5px;border-radius:50%;background:var(--glow)}
+  .day.empty .hours{color:var(--dim);font-size:13px;align-items:center;padding-top:6px}
+
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  details.cfg{margin-top:22px;border:1px solid var(--line);border-radius:12px;padding:0 16px}
+  details.cfg summary{cursor:pointer;padding:13px 0;font-size:14px;color:var(--muted);list-style:none}
+  details.cfg summary::-webkit-details-marker{display:none}
+  details.cfg[open] summary{border-bottom:1px solid var(--line)}
+  .cfg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;padding:16px 0}
+  .field label{display:block;font-size:12px;color:var(--dim);margin-bottom:5px}
+  .field input{width:100%;background:var(--abyss);border:1px solid var(--line);color:var(--foam);font:inherit;padding:8px 10px;border-radius:8px}
+  .field input:focus{outline:none;border-color:var(--glow)}
+
+  .msg{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+  .msg button{margin-top:12px}
+  @media (max-width:520px){
+    .day{grid-template-columns:44px 1fr;gap:8px}
+    .cell{width:42px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Parte de olas <span>· hasta el domingo</span></h1>
+      <div class="stamp" id="stamp">Cargando…</div>
+    </div>
+    <button class="refresh" id="refresh">↻ Actualizar</button>
+  </header>
+
+  <div id="hero"></div>
+  <div id="spots"></div>
+
+  <div class="legend" id="legend" hidden>
+    <span><i class="swatch" style="background:var(--glow)"></i> Óptima</span>
+    <span><i class="swatch" style="background:var(--panel)"></i> Fuera de rango</span>
+    <span><i class="swatch" style="background:var(--coral)"></i> Muy grande / viento fuerte</span>
+    <span><i class="swatch" style="background:var(--glow);border-radius:50%"></i> Viento offshore</span>
+  </div>
+
+  <details class="cfg">
+    <summary>⚙ Ajustar condiciones óptimas</summary>
+    <div class="cfg-grid">
+      <div class="field"><label>Ola mínima (m)</label><input type="number" step="0.1" id="olaMin"></div>
+      <div class="field"><label>Ola máxima (m)</label><input type="number" step="0.1" id="olaMax"></div>
+      <div class="field"><label>Período mínimo (s)</label><input type="number" step="0.5" id="perMin"></div>
+      <div class="field"><label>Viento máximo (km/h)</label><input type="number" step="1" id="vtoMax"></div>
+    </div>
+  </details>
+</div>
+
+<script>
+const SPOTS = [
+  {nombre:"Pinamar",       lat:-37.106, lon:-56.861},
+  {nombre:"Mar del Plata", lat:-38.005, lon:-57.545},
+];
+
+const DEF = {olaMin:0.7, olaMax:2.0, perMin:7.0, vtoMax:18.0};
+const HORA_DESDE = 6, HORA_HASTA = 20;
+const OFF_DESDE = 200, OFF_HASTA = 340;
+const DIAS = ["dom","lun","mar","mié","jue","vie","sáb"];
+
+let cfg = load();
+let cache = null;
+
+function load(){
+  try{ return {...DEF, ...JSON.parse(localStorage.getItem("surfCfg")||"{}")}; }
+  catch{ return {...DEF}; }
+}
+function save(){ try{ localStorage.setItem("surfCfg", JSON.stringify(cfg)); }catch{} }
+
+function limiteDomingo(){
+  const n = new Date();
+  const falta = (7 - n.getDay()) % 7;
+  const d = new Date(n); d.setDate(n.getDate()+falta); d.setHours(23,59,59,999);
+  return d;
+}
+
+async function getJSON(url){
+  const r = await fetch(url);
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  return r.json();
+}
+
+async function fetchSpot(s){
+  const marine = await getJSON(
+    `https://marine-api.open-meteo.com/v1/marine?latitude=${s.lat}&longitude=${s.lon}`+
+    `&hourly=wave_height,wave_period,swell_wave_period&timezone=auto&forecast_days=7`);
+  const wind = await getJSON(
+    `https://api.open-meteo.com/v1/forecast?latitude=${s.lat}&longitude=${s.lon}`+
+    `&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh&timezone=auto&forecast_days=7`);
+
+  const M = marine.hourly, W = wind.hourly;
+  const ws = {}, wd = {};
+  W.time.forEach((t,i)=>{ ws[t]=W.wind_speed_10m[i]; wd[t]=W.wind_direction_10m[i]; });
+
+  return M.time.map((t,i)=>({
+    t, dt:new Date(t),
+    ola:M.wave_height[i],
+    per:M.wave_period[i] ?? M.swell_wave_period[i],
+    vto:ws[t], dir:wd[t],
+  }));
+}
+
+function optima(f){
+  if(f.ola==null||f.per==null||f.vto==null) return false;
+  return f.ola>=cfg.olaMin && f.ola<=cfg.olaMax && f.per>=cfg.perMin && f.vto<=cfg.vtoMax;
+}
+function offshore(d){ return d!=null && d>=OFF_DESDE && d<=OFF_HASTA; }
+
+function porDia(filas){
+  const lim = limiteDomingo(), ahora = new Date();
+  const dias = new Map();
+  for(const f of filas){
+    if(f.dt < ahora || f.dt > lim) continue;
+    const h = f.dt.getHours();
+    if(h < HORA_DESDE || h > HORA_HASTA) continue;
+    const k = f.dt.toDateString();
+    if(!dias.has(k)) dias.set(k, {dt:f.dt, horas:[]});
+    dias.get(k).horas.push(f);
+  }
+  return [...dias.values()];
+}
+
+function render(){
+  if(!cache) return;
+  const heroEl = document.getElementById("hero");
+  const spotsEl = document.getElementById("spots");
+  spotsEl.innerHTML = "";
+  document.getElementById("legend").hidden = false;
+
+  let mejor = null; // {spot, f}
+
+  cache.forEach(({spot, filas})=>{
+    const dias = porDia(filas);
+    const buenas = [];
+    dias.forEach(d => d.horas.forEach(f=>{ if(optima(f)) buenas.push({spot:spot.nombre,f}); }));
+    buenas.forEach(b=>{ if(!mejor || b.f.dt < mejor.f.dt) mejor = b; });
+
+    const sec = document.createElement("section");
+    sec.className = "spot";
+    const pill = buenas.length
+      ? `<span class="pill good">${buenas.length} ${buenas.length===1?"hora buena":"horas buenas"}</span>`
+      : `<span class="pill">sin ventanas</span>`;
+    sec.innerHTML = `<div class="spot-head"><h2>${spot.nombre}</h2>${pill}</div>`;
+
+    dias.forEach(d=>{
+      const row = document.createElement("div");
+      row.className = "day";
+      const lbl = `<div class="day-label"><b>${DIAS[d.dt.getDay()]}</b>${d.dt.getDate()}/${d.dt.getMonth()+1}</div>`;
+      const cells = d.horas.map(f=>{
+        const opt = optima(f);
+        const big = f.ola!=null && f.ola>cfg.olaMax;
+        const small = f.ola!=null && f.ola<cfg.olaMin;
+        const windy = f.vto!=null && f.vto>cfg.vtoMax;
+        const cls = ["cell"];
+        if(opt) cls.push("optimal");
+        if(big) cls.push("big");
+        if(small && !opt) cls.push("small");
+        cls.push(windy ? "windy" : "calm-wind");
+        const title = `${f.dt.getHours()}h · ola ${fmt(f.ola)}m · período ${fmt(f.per)}s · viento ${fmt(f.vto)} km/h${offshore(f.dir)?" offshore":""}`;
+        return `<div class="${cls.join(" ")}" title="${title}">
+          ${offshore(f.dir)?'<i class="off"></i>':''}
+          <div class="hr">${f.dt.getHours()}h</div>
+          <div class="wv">${fmt(f.ola)}</div>
+          <div class="pd">${fmt(f.per)}s</div>
+        </div>`;
+      }).join("");
+      row.innerHTML = lbl + `<div class="hours">${cells}</div>`;
+      sec.appendChild(row);
+    });
+
+    if(dias.length===0){
+      const row=document.createElement("div");
+      row.className="day empty";
+      row.innerHTML=`<div class="day-label"></div><div class="hours">Sin datos en el rango.</div>`;
+      sec.appendChild(row);
+    }
+    spotsEl.appendChild(sec);
+  });
+
+  // hero
+  if(mejor){
+    const f = mejor.f;
+    heroEl.className = "hero";
+    heroEl.innerHTML = `
+      <div class="eye">Próxima ventana buena</div>
+      <div class="verdict"><span class="accent">${DIAS[f.dt.getDay()]} ${f.dt.getHours()}h</span> en ${mejor.spot}</div>
+      <div class="sub">ola ${fmt(f.ola)} m · período ${fmt(f.per)} s · viento ${fmt(f.vto)} km/h${offshore(f.dir)?" · offshore 🤙":""}</div>`;
+  }else{
+    heroEl.className = "hero calm";
+    heroEl.innerHTML = `
+      <div class="eye">Estado</div>
+      <div class="verdict">Nada bueno hasta el domingo</div>
+      <div class="sub">Ninguna hora cumple tus condiciones en los dos spots. Probá aflojar los umbrales abajo.</div>`;
+  }
+}
+
+function fmt(x){ return x==null ? "–" : (Math.round(x*10)/10).toString(); }
+
+async function cargar(){
+  const btn = document.getElementById("refresh");
+  const stamp = document.getElementById("stamp");
+  btn.disabled = true;
+  stamp.textContent = "Cargando pronóstico…";
+  document.getElementById("hero").innerHTML = "";
+  try{
+    const res = [];
+    for(const s of SPOTS){ res.push({spot:s, filas:await fetchSpot(s)}); }
+    cache = res;
+    render();
+    const ahora = new Date();
+    stamp.textContent = "Actualizado " + ahora.toLocaleString("es-AR",{weekday:"short",hour:"2-digit",minute:"2-digit"});
+  }catch(e){
+    console.error(e);
+    document.getElementById("hero").innerHTML =
+      `<div class="msg">No se pudo cargar el pronóstico.
+       <br><small style="color:var(--dim)">Detalle: ${e.message}</small>
+       <br><button class="refresh" onclick="cargar()">↻ Reintentar</button></div>`;
+    stamp.textContent = "Error al cargar";
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+// config inputs
+["olaMin","olaMax","perMin","vtoMax"].forEach(k=>{
+  const el = document.getElementById(k);
+  el.value = cfg[k];
+  el.addEventListener("change", ()=>{
+    const v = parseFloat(el.value);
+    if(!isNaN(v)){ cfg[k]=v; save(); render(); }
+  });
+});
+
+document.getElementById("refresh").addEventListener("click", cargar);
+cargar();
+</script>
+</body>
+</html>
